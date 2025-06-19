@@ -41,7 +41,9 @@ app.get("/tutor",async(req,res)=>{
 })
 // cart
 app.get("/cart",async(req,res)=>{
-    const result=await cartCollection.find().toArray();
+    const email=req.query.email
+    const query={email:email}
+    const result=await cartCollection.find(query).toArray();
     res.send(result)
 })
 app.post('/cart',async(req,res)=>{
