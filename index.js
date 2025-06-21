@@ -2,7 +2,7 @@ const express = require('express');
 const app=express();
 const cors = require('cors');
 require('dotenv').config()
-const { ObjectId } = require('mongodb');
+
 const port=process.env.PORT||5000;
 app.use(cors());
 app.use(express.json());
@@ -30,6 +30,7 @@ async function run() {
    const tutorCollection=client.db("StudyDB").collection('tutor')
    const reviewCollection=client.db("StudyDB").collection('review')
    const cartCollection=client.db("StudyDB").collection('cart')
+   const userCollection=client.db("StudyDB").collection('user')
 //  studysessio
 app.get("/studysession",async(req,res)=>{
     const result=await studysessionCollection.find().toArray()
@@ -57,6 +58,19 @@ const id=req.params.id
 const query={_id:new ObjectId(id)}
 const result=await cartCollection.deleteOne(query)
 res.send(result)
+})
+// user related api
+app.post('/user',async(req,res)=>{
+  const user=req.body;
+  // insert email user if user does not exist
+  // you can do this manay ways(1.email uniq 2. upsert 3.simple checking)
+  const query={email:user.email}
+  const existingUser=await userCollection.findOne(query)
+  if(existingUser){
+    return res.send({message:"user already exist",insertedId:null})
+  }
+  const result=await userCollection.insertOne(user);
+  res.send(result)
 })
 // review
 app.get("/review",async(req,res)=>{
