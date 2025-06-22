@@ -62,6 +62,7 @@ res.send(result)
 // user related api
 app.post('/user',async(req,res)=>{
   const user=req.body;
+
   // insert email user if user does not exist
   // you can do this manay ways(1.email uniq 2. upsert 3.simple checking)
   const query={email:user.email}
@@ -76,6 +77,36 @@ app.post('/user',async(req,res)=>{
 app.post('/user',async(req,res)=>{
   const userInfo=req.body;
   const result=await userCollection.insertOne(userInfo)
+  res.send(result)
+})
+// user role
+app.get("/user/:email",async(req,res)=>{
+  const email=req.params.email
+  const user=await userCollection.findOne({email:email})
+  res.send(user)
+})
+// all user get koray fetch korbo
+app.get("/user",async(req,res)=>{
+  const result=await userCollection.find().toArray();
+  res.send(result)
+})
+// user delete
+app.delete("/user/:id",async(req,res)=>{
+  const id=req.params.id;
+  const query={_id:new ObjectId(id)}
+  const result=await userCollection.deleteOne(query);
+  res.send(result)
+})
+// admin setup
+app.patch('/user/admin/:id',async(req,res)=>{
+  const id=req.params.id;
+  const query={_id:new ObjectId(id)}
+  const updatedoc={
+    $set:{
+      role:"admin"
+    }
+  }
+  const result=await userCollection.updateOne(query,updatedoc);
   res.send(result)
 })
 // review
