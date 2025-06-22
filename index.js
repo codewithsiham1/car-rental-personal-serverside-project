@@ -2,9 +2,8 @@ const express = require('express');
 const app=express();
 const cors = require('cors');
 const jwt = require('jsonwebtoken');
-const stripe=require('stripe')(process.env.STRIPE_SECRET_KEY)
 require('dotenv').config()
-
+const stripe=require('stripe')(process.env.STRIPE_SECRET_KEY)
 const port=process.env.PORT||5000;
 app.use(cors({
     origin: 'http://localhost:5173',
@@ -37,6 +36,7 @@ async function run() {
    const reviewCollection=client.db("StudyDB").collection('review')
    const cartCollection=client.db("StudyDB").collection('cart')
    const userCollection=client.db("StudyDB").collection('user')
+   const paymentCollection=client.db("StudyDB").collection('payment')
   //  jwt related api
   app.post('/jwt',async(req,res)=>{
     const user=req.body;
@@ -159,6 +159,9 @@ app.get("/review",async(req,res)=>{
 app.post('/create-payment-intent',async(req,res)=>{
   const {price}=req.body;
   const amount=parseInt(price * 100)
+   if (amount < 50) {
+    return res.status(400).send({ error: "Amount must be at least $0.50" });
+  }
   const paymentIntent=await stripe.paymentIntents.create({
     amount:amount,
     currency:"usd",
@@ -167,6 +170,14 @@ app.post('/create-payment-intent',async(req,res)=>{
   res.send({
     clientSecret:paymentIntent.client_secret
   })
+})
+// payment related api
+app.post( '/payment',async(req,res)=>{
+  const payment=req.body;
+  const paymentResult=await paymentCollection.insertOne(payment)
+  // carefull delete each item from the cart
+ console.log('payment info',payment)
+ res.send(paymentResult)
 })
     // Send a ping to confirm a successful connection
     await client.db("admin").command({ ping: 1 });
