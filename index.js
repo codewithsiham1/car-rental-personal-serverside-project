@@ -1,10 +1,15 @@
 const express = require('express');
 const app=express();
 const cors = require('cors');
+const jwt = require('jsonwebtoken');
 require('dotenv').config()
 
 const port=process.env.PORT||5000;
-app.use(cors());
+app.use(cors({
+    origin: 'http://localhost:5173',
+  credentials: true,
+  allowedHeaders: ['Content-Type', 'Authorization'],
+}));
 app.use(express.json());
 // DB_USER=Study-Session
 // DB_PASS=wyuJpyXhuph9XaaU
@@ -31,6 +36,39 @@ async function run() {
    const reviewCollection=client.db("StudyDB").collection('review')
    const cartCollection=client.db("StudyDB").collection('cart')
    const userCollection=client.db("StudyDB").collection('user')
+  //  jwt related api
+  app.post('/jwt',async(req,res)=>{
+    const user=req.body;
+    const token=jwt.sign(user,process.env. ACCESS_TOKEN_SECRET,{expiresIn:"1h"});
+    res.send({token})
+  
+  })
+  // middleware
+  const verifyToken=(req,res,next)=>{
+   console.log('inside verifytoken',req.headers)
+   if(!req.headers.authorization){
+ return res.status(401).send({ message:'forbidden access token'})
+   }
+   const token=req.headers.authorization.split(' ')[1]
+ jwt.verify(token,process.env.ACCESS_TOKEN_SECRET,(error,decoded)=>{
+  if(error){
+    return res.status(401).send({message:'forbidden access'})
+  }
+  req.decoded=decoded
+   next()
+ })
+  
+  }
+  // use verify admin after use verifyToken
+  const verifyAdmin=async(req,res,next)=>{
+  const email=req.decoded.email;
+  const query={email:email};
+  const user=await userCollection.findOne(query)
+  if(user?.role !=='admin'){
+      return res.status(403).send({ message: 'forbidden access: admin only' });
+  }
+  next()
+  }
 //  studysessio
 app.get("/studysession",async(req,res)=>{
     const result=await studysessionCollection.find().toArray()
@@ -86,19 +124,20 @@ app.get("/user/:email",async(req,res)=>{
   res.send(user)
 })
 // all user get koray fetch korbo
-app.get("/user",async(req,res)=>{
+app.get("/user",verifyToken,verifyAdmin,async(req,res)=>{
+  
   const result=await userCollection.find().toArray();
   res.send(result)
 })
 // user delete
-app.delete("/user/:id",async(req,res)=>{
+app.delete("/user/:id",verifyToken,verifyAdmin,async(req,res)=>{
   const id=req.params.id;
   const query={_id:new ObjectId(id)}
   const result=await userCollection.deleteOne(query);
   res.send(result)
 })
 // admin setup
-app.patch('/user/admin/:id',async(req,res)=>{
+app.patch('/user/admin/:id',verifyToken,verifyAdmin,async(req,res)=>{
   const id=req.params.id;
   const query={_id:new ObjectId(id)}
   const updatedoc={
@@ -109,6 +148,7 @@ app.patch('/user/admin/:id',async(req,res)=>{
   const result=await userCollection.updateOne(query,updatedoc);
   res.send(result)
 })
+
 // review
 app.get("/review",async(req,res)=>{
     const result=await reviewCollection.find().toArray()
