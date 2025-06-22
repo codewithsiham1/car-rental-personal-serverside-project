@@ -72,6 +72,12 @@ app.post('/user',async(req,res)=>{
   const result=await userCollection.insertOne(user);
   res.send(result)
 })
+// user ar role setup
+app.post('/user',async(req,res)=>{
+  const userInfo=req.body;
+  const result=await userCollection.insertOne(userInfo)
+  res.send(result)
+})
 // review
 app.get("/review",async(req,res)=>{
     const result=await reviewCollection.find().toArray()
