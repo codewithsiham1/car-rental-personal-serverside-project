@@ -70,6 +70,15 @@ async function run() {
   }
   next()
   }
+  // payment history
+  app.get('/payment/:email',verifyToken,async(req,res)=>{
+    const query={email:req.params.email}
+    if(req.params.email !==req.decoded.email){
+      return res.status(403).send({message:'forbidden access'})
+    }
+    const result=await paymentCollection.find(query).toArray();
+    res.send(result)
+  })
 //  studysessio
 app.get("/studysession",async(req,res)=>{
     const result=await studysessionCollection.find().toArray()
@@ -177,7 +186,11 @@ app.post( '/payment',async(req,res)=>{
   const paymentResult=await paymentCollection.insertOne(payment)
   // carefull delete each item from the cart
  console.log('payment info',payment)
- res.send(paymentResult)
+ const query={_id:{
+  $in:payment.cartId.map(id=>new ObjectId(id))
+ }}
+ const deleteResult=await cartCollection.deleteMany(query)
+ res.send({paymentResult,deleteResult})
 })
     // Send a ping to confirm a successful connection
     await client.db("admin").command({ ping: 1 });
@@ -187,6 +200,8 @@ app.post( '/payment',async(req,res)=>{
     // await client.close();
   }
 }
+
+
 run().catch(console.dir);
 
 app.get('/',(req,res)=>{
