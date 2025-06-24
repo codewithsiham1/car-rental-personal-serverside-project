@@ -194,6 +194,12 @@ app.post( '/payment',async(req,res)=>{
  res.send({paymentResult,deleteResult})
 })
 // booked session
+app.get("/bookedSession",async(req,res)=>{
+  const email=req.query.email;
+  if(!email)return res.send([])
+    const result=await bookedSessionCollection.find({studentEmail:email}).toArray();
+  res.send(result)
+})
  app.post('/bookedSession',async(req,res)=>{
   const bookingInfo=req.body;
   const result=await bookedSessionCollection.insertOne(bookingInfo);
