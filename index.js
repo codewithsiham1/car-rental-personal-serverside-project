@@ -37,6 +37,7 @@ async function run() {
    const cartCollection=client.db("StudyDB").collection('cart')
    const userCollection=client.db("StudyDB").collection('user')
    const paymentCollection=client.db("StudyDB").collection('payment')
+   const bookedSessionCollection=client.db("StudyDB").collection('bookedSession')
   //  jwt related api
   app.post('/jwt',async(req,res)=>{
     const user=req.body;
@@ -192,6 +193,12 @@ app.post( '/payment',async(req,res)=>{
  const deleteResult=await cartCollection.deleteMany(query)
  res.send({paymentResult,deleteResult})
 })
+// booked session
+ app.post('/bookedSession',async(req,res)=>{
+  const bookingInfo=req.body;
+  const result=await bookedSessionCollection.insertOne(bookingInfo);
+  res.send(result)
+ })
     // Send a ping to confirm a successful connection
     await client.db("admin").command({ ping: 1 });
     console.log("Pinged your deployment. You successfully connected to MongoDB!");
