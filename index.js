@@ -39,6 +39,7 @@ async function run() {
    const paymentCollection=client.db("StudyDB").collection('payment')
    const bookedSessionCollection=client.db("StudyDB").collection('bookedSession')
    const notesCollection=client.db("StudyDB").collection('notes')
+   const materialsCollection = client.db("StudyDB").collection("materials");
   //  jwt related api
   app.post('/jwt',async(req,res)=>{
     const user=req.body;
@@ -224,6 +225,33 @@ app.delete('/notes/:id',async(req,res)=>{
   const result=await notesCollection.deleteOne(query);
   res.send(result)
 })
+// update note
+app.put('/notes/:id',async(req,res)=>{
+  const {id}=req.params;
+  const {title,description}=req.body
+  const query={_id:new ObjectId(id)}
+  const updateDoc={
+    $set:{
+      title,description
+    }
+  }
+  const result=await notesCollection.updateOne(query,updateDoc)
+  res.send(result)
+})
+// get note
+app.get('notes/:id',async(req,res)=>{
+  const {id}=req.params;
+  const query={_id:new ObjectId(id)}
+  const note=await notesCollection.findOne(query);
+  res.send(note)
+})
+// metarils
+app.get('/materials', async (req, res) => {
+  const sessionId = req.query.sessionId;
+  if (!sessionId) return res.send([]);
+  const result = await materialsCollection.find({ sessionId }).toArray();
+  res.send(result);
+});
     // Send a ping to confirm a successful connection
     await client.db("admin").command({ ping: 1 });
     console.log("Pinged your deployment. You successfully connected to MongoDB!");
