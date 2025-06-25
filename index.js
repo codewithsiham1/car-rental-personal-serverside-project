@@ -41,6 +41,7 @@ async function run() {
    const notesCollection=client.db("StudyDB").collection('notes')
    const materialsCollection = client.db("StudyDB").collection("materials");
    const sessionsCollection = client.db("StudyDB").collection("sessions");
+  
   //  jwt related api
   app.post('/jwt',async(req,res)=>{
     const user=req.body;
@@ -255,6 +256,11 @@ app.get('/materials', async (req, res) => {
   res.send(result);
 });
 // sesson
+app.get('/sessions', async (req, res) => {
+  const result = await sessionsCollection.find().toArray();
+  res.send(result);
+});
+
 app.post('/sessions',async(req,res)=>{
   const session=req.body;
   const result=await sessionsCollection.insertOne(session);
@@ -262,12 +268,17 @@ app.post('/sessions',async(req,res)=>{
 })
 app.patch('/sessions/:id', async (req, res) => {
   const id = req.params.id;
-  const { status } = req.body;
+  const { status, registrationFee } = req.body;
   const query = { _id: new ObjectId(id) };
-  const updateDoc = { $set: { status } };
-  const result = await studysessionCollection.updateOne(query, updateDoc);
+  const updateDoc = {
+    $set: {
+      status,
+      registrationFee: registrationFee || 0
+    }
+  };
+  const result = await sessionsCollection.updateOne(query, updateDoc);
   if (result.modifiedCount > 0) {
-    res.send({ message: 'Status updated successfully' });
+    res.send({ message: 'Session updated successfully' });
   } else {
     res.status(404).send({ message: 'Session not found' });
   }
