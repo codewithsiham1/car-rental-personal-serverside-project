@@ -38,6 +38,7 @@ async function run() {
    const userCollection=client.db("StudyDB").collection('user')
    const paymentCollection=client.db("StudyDB").collection('payment')
    const bookedSessionCollection=client.db("StudyDB").collection('bookedSession')
+   const notesCollection=client.db("StudyDB").collection('notes')
   //  jwt related api
   app.post('/jwt',async(req,res)=>{
     const user=req.body;
@@ -205,6 +206,24 @@ app.get("/bookedSession",async(req,res)=>{
   const result=await bookedSessionCollection.insertOne(bookingInfo);
   res.send(result)
  })
+//  notes collection
+app.get('/notes',async(req,res)=>{
+  const email=req.query.email;
+   const result=await notesCollection.find({email}).toArray();
+   res.send(result)
+})
+app.post("/notes",async(req,res)=>{
+  const note=req.body;
+  const result=await notesCollection.insertOne(note);
+  res.send(result)
+})
+// delete note
+app.delete('/notes/:id',async(req,res)=>{
+  const id=req.params.id;
+  const query={_id:new ObjectId(id)}
+  const result=await notesCollection.deleteOne(query);
+  res.send(result)
+})
     // Send a ping to confirm a successful connection
     await client.db("admin").command({ ping: 1 });
     console.log("Pinged your deployment. You successfully connected to MongoDB!");
