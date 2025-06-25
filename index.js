@@ -250,9 +250,27 @@ app.get('notes/:id',async(req,res)=>{
 })
 // metarils
 app.get('/materials', async (req, res) => {
-  const sessionId = req.query.sessionId;
-  if (!sessionId) return res.send([]);
-  const result = await materialsCollection.find({ sessionId }).toArray();
+  const { sessionId, tutorEmail } = req.query;
+
+  const query = {};
+  if (sessionId) query.sessionId = sessionId;
+  if (tutorEmail) query.tutorEmail = tutorEmail;
+
+  const result = await materialsCollection.find(query).toArray();
+  res.send(result);
+})
+app.post('/materials', async (req, res) => {
+  const material = req.body;
+  const result = await materialsCollection.insertOne(material);
+  res.send(result);
+});
+app.put('/materials/:id', async (req, res) => {
+  const id = req.params.id;
+  const updated = req.body;
+  const result = await materialsCollection.updateOne(
+    { _id: new ObjectId(id) },
+    { $set: updated }
+  );
   res.send(result);
 });
 // sesson
