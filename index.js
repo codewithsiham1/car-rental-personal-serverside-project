@@ -40,6 +40,7 @@ async function run() {
    const bookedSessionCollection=client.db("StudyDB").collection('bookedSession')
    const notesCollection=client.db("StudyDB").collection('notes')
    const materialsCollection = client.db("StudyDB").collection("materials");
+   const sessionsCollection = client.db("StudyDB").collection("sessions");
   //  jwt related api
   app.post('/jwt',async(req,res)=>{
     const user=req.body;
@@ -87,6 +88,7 @@ app.get("/studysession",async(req,res)=>{
     const result=await studysessionCollection.find().toArray()
     res.send(result)
 })
+
 // tutor
 app.get("/tutor",async(req,res)=>{
     const result=await tutorCollection.find().toArray()
@@ -252,6 +254,25 @@ app.get('/materials', async (req, res) => {
   const result = await materialsCollection.find({ sessionId }).toArray();
   res.send(result);
 });
+// sesson
+app.post('/sessions',async(req,res)=>{
+  const session=req.body;
+  const result=await sessionsCollection.insertOne(session);
+  res.send(result)
+})
+app.patch('/sessions/:id', async (req, res) => {
+  const id = req.params.id;
+  const { status } = req.body;
+  const query = { _id: new ObjectId(id) };
+  const updateDoc = { $set: { status } };
+  const result = await studysessionCollection.updateOne(query, updateDoc);
+  if (result.modifiedCount > 0) {
+    res.send({ message: 'Status updated successfully' });
+  } else {
+    res.status(404).send({ message: 'Session not found' });
+  }
+});
+
     // Send a ping to confirm a successful connection
     await client.db("admin").command({ ping: 1 });
     console.log("Pinged your deployment. You successfully connected to MongoDB!");
