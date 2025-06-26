@@ -171,21 +171,16 @@ app.get("/review",async(req,res)=>{
     res.send(result)
 })
 // payment intent
-app.post('/create-payment-intent',async(req,res)=>{
-  const {price}=req.body;
-  const amount=parseInt(price * 100)
-   if (amount < 50) {
-    return res.status(400).send({ error: "Amount must be at least $0.50" });
-  }
-  const paymentIntent=await stripe.paymentIntents.create({
-    amount:amount,
-    currency:"usd",
-    payment_method_types:['card']
-  })
-  res.send({
-    clientSecret:paymentIntent.client_secret
-  })
-})
+app.post('/create-payment-intent', async (req, res) => {
+  const { price } = req.body;
+  const amount = parseInt(price * 100); // convert to cents
+  const paymentIntent = await stripe.paymentIntents.create({
+    amount,
+    currency: 'usd',
+    payment_method_types: ['card'],
+  });
+  res.send({ clientSecret: paymentIntent.client_secret });
+});
 // payment related api
 app.post( '/payment',async(req,res)=>{
   const payment=req.body;
@@ -271,6 +266,11 @@ app.put('/materials/:id', async (req, res) => {
     { _id: new ObjectId(id) },
     { $set: updated }
   );
+  res.send(result);
+});
+app.delete('/materials/:id', async (req, res) => {
+  const id = req.params.id;
+  const result = await materialsCollection.deleteOne({ _id: new ObjectId(id) });
   res.send(result);
 });
 // sesson
