@@ -75,15 +75,24 @@ async function run() {
   }
   next()
   }
-  // payment history
-  app.get('/payment/:email',verifyToken,async(req,res)=>{
-    const query={email:req.params.email}
-    if(req.params.email !==req.decoded.email){
-      return res.status(403).send({message:'forbidden access'})
-    }
-    const result=await paymentCollection.find(query).toArray();
-    res.send(result)
+// payment intent
+app.post('/create-payment-intent',async(req,res)=>{
+  const {price}=req.body;
+  if (price < 0.5) {
+    return res.status(400).send({ error: "Minimum amount is $0.50" });
+  }
+
+  const amount=Math.round(price *100)
+  const paymentIntent=await stripe.paymentIntents.create({
+    amount:amount,
+    currency:'usd',
+    payment_method_types:['card']
   })
+  res.send({
+    clientSecret:paymentIntent.client_secret
+  })
+})
+
 //  studysessio
 app.get("/studysession",async(req,res)=>{
     const result=await studysessionCollection.find().toArray()
@@ -95,24 +104,7 @@ app.get("/tutor",async(req,res)=>{
     const result=await tutorCollection.find().toArray()
     res.send(result)
 })
-// cart
-app.get("/cart",async(req,res)=>{
-    const email=req.query.email
-    const query={email:email}
-    const result=await cartCollection.find(query).toArray();
-    res.send(result)
-})
-app.post('/cart',async(req,res)=>{
-    const cartItem=req.body;
-    const result=await cartCollection.insertOne(cartItem);
-    res.send(result)
-})
-app.delete('/cart/:id',async(req,res)=>{
-const id=req.params.id
-const query={_id:new ObjectId(id)}
-const result=await cartCollection.deleteOne(query)
-res.send(result)
-})
+
 // user related api
 app.post('/user',async(req,res)=>{
   const user=req.body;
@@ -170,29 +162,8 @@ app.get("/review",async(req,res)=>{
     const result=await reviewCollection.find().toArray()
     res.send(result)
 })
-// payment intent
-app.post('/create-payment-intent', async (req, res) => {
-  const { price } = req.body;
-  const amount = parseInt(price * 100); // convert to cents
-  const paymentIntent = await stripe.paymentIntents.create({
-    amount,
-    currency: 'usd',
-    payment_method_types: ['card'],
-  });
-  res.send({ clientSecret: paymentIntent.client_secret });
-});
-// payment related api
-app.post( '/payment',async(req,res)=>{
-  const payment=req.body;
-  const paymentResult=await paymentCollection.insertOne(payment)
-  // carefull delete each item from the cart
- console.log('payment info',payment)
- const query={_id:{
-  $in:payment.cartId.map(id=>new ObjectId(id))
- }}
- const deleteResult=await cartCollection.deleteMany(query)
- res.send({paymentResult,deleteResult})
-})
+
+
 // booked session
 app.get("/bookedSession",async(req,res)=>{
   const email=req.query.email;
