@@ -11,8 +11,7 @@ app.use(cors({
   allowedHeaders: ['Content-Type', 'Authorization'],
 }));
 app.use(express.json());
-// DB_USER=Study-Session
-// DB_PASS=wyuJpyXhuph9XaaU
+
 
 
 const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
